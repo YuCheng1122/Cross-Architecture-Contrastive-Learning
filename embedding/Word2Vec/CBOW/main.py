@@ -4,12 +4,12 @@ from multiprocessing import Pool, cpu_count
 import pickle
 from tqdm import tqdm
 from gensim.models import Word2Vec
-from preprocessing import iterate_json_files
+from preprocessing import iterate_json_files, _tokenize_line
 
 DATA_DIR = Path("/home/tommy/Projects/cross-architecture/reverse/output_new/results")
 TRAIN_CSV_PATH = Path("/home/tommy/Projects/pcodeFcg/dataset/csv/train.csv")
 OUTPUT_DIR = Path("/home/tommy/Projects/pcodeFcg/vector/contrastive/word2vec/CBOW")
-PICKLE_PATH = OUTPUT_DIR / "sentences_20250509_train_450.pkl"
+PICKLE_PATH = OUTPUT_DIR / "sentences_train.pkl"
 BATCH_FILES = 1000
 
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -17,17 +17,18 @@ OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 def extract_sentences_from_file(file_name_data):
     file_name, pcode_dict = file_name_data
     sentences = []
+
     try:
         for func_data in pcode_dict.values():
-            func_sentences = [
-                ins.get("opcode")
-                for ins in func_data.get("instructions", [])
-                if ins.get("opcode")
-            ]
-            if func_sentences:
-                sentences.append(func_sentences)
+            for instruction in func_data.get("instructions", []):
+                op_str = instruction.get("operation")
+                if isinstance(op_str, str):
+                    tokens = _tokenize_line(op_str)
+                    if tokens:
+                        sentences.append(tokens)
     except Exception as e:
         print(f"Error processing file {file_name}: {e}")
+
     return sentences
 
 def corpus_generator(csv_path: Path, root_dir: Path, batch_files: int, pickle_path: Path):
@@ -64,7 +65,7 @@ def train_word2vec(sentences, output_path: Path):
         seed=42,
     )
     print("\nTraining done. Saving model…")
-    model.save(str(output_path / "word2vec_20250509_train_450.model"))
+    model.save(str(output_path / "word2vec_x86.model"))
     print("Model size: ", len(model.wv.key_to_index))
 
 if __name__ == "__main__":

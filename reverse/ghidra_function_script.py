@@ -54,8 +54,8 @@ try:
 
     # Collecting all lines to write in batch
     for func in funcs:
-        # if func.isExternal() or func.isThunk():
-        #     continue
+        if func.isExternal() or func.isThunk():
+            continue
         entry_point = func.getEntryPoint()
         entry_point_offset = hex(entry_point.getOffset())
         name = func.getName()
@@ -86,8 +86,8 @@ try:
         callees = func.getCalledFunctions(None)
         for callee in callees:
             # get the entry point of the callee function
-            # if callee.isExternal() or callee.isThunk():
-            #     continue
+            if callee.isExternal() or callee.isThunk():
+                continue
             callee_entry_point = callee.getEntryPoint()
             callee_entry_point_offset = hex(callee_entry_point.getOffset())
             # Write DOT file content
