@@ -32,25 +32,6 @@ def _map_operand(op_type: str) -> str:
         return "STACK"
     return "UNK"
 
-def _tokenize_line(line: str) -> List[str]:
-    command_match = _opcode_pat.search(line)
-    if not command_match:
-        return []
-
-    command = command_match.group(1)
-    operands = _operand_pattern.findall(line)
-    types = [_map_operand(op) for op, _ in operands]
-
-    if len(types) > 5:
-        types = types[:4] + ["MIX"]
-
-    token = "-".join([command] + types)
-
-    if token.count("-") > 5:
-        assert False, f"Token too long: {token}"
-
-    return [token]
-
 
 def clean_data(json_data, G_raw: nx.DiGraph) -> nx.DiGraph:
     G = nx.DiGraph()
@@ -74,15 +55,30 @@ def clean_data(json_data, G_raw: nx.DiGraph) -> nx.DiGraph:
             G.add_edge(src, dst)
     return G
 
+def parse_tokens_from_operation(operation_str: str) -> list[str]:
+    if not operation_str:
+        return []
+    command_match = _opcode_pat.search(operation_str)
+    if not command_match:
+        return []
+    command = command_match.group(1)
+    tokens = [command]
+
+    operands = _operand_pattern.findall(operation_str)
+    if operands:
+        for op_type, _ in operands:
+            mapped_operand = _map_operand(op_type)
+            tokens.append(mapped_operand)
+    return tokens
+
 def vectorize_graph_nodes(G: nx.Graph, model: Word2Vec):
     zero_vec = model.wv.vectors[0] * 0
     for _, data in G.nodes(data=True):
         operation_lines = data.get("operation", [])
-        tokens = [token for line in operation_lines for token in _tokenize_line(line)]
+        tokens = [tok for line in operation_lines for tok in parse_tokens_from_operation(line)]
         vectors = [model.wv[t] for t in tokens if t in model.wv]
         data["vector"] = sum(vectors) / len(vectors) if vectors else zero_vec
         data.pop("operation", None)
-
 
 def process_single_file(file_info: Tuple[Path, Path, str], output_base_path: Path, model: Word2Vec) -> str:
     json_path, dot_path, file_name = file_info
@@ -130,9 +126,9 @@ def process_all(csv_file_path: Path, root_dir: Path, out_dir: Path, w2v_model_pa
     fail = [r for r in results if r.startswith("Error")]
 
 if __name__ == "__main__":
-    CSV_FILE = Path("/home/tommy/Projects/pcodeFcg/dataset/csv/train.csv")
+    CSV_FILE = Path("/home/tommy/Projects/pcodeFcg/dataset/csv/temp/test_mips.csv")
     ROOT_DIR = Path("/home/tommy/Projects/cross-architecture/reverse/output_new/results")
-    OUT_DIR = Path("/home/tommy/Projects/pcodeFcg/vector/contrastive/GNN/mips/train")
-    W2V_MODEL = Path("/home/tommy/Projects/pcodeFcg/vector/contrastive/word2vec/CBOW/word2vec_20250509_train_450.model")
+    OUT_DIR = Path("/home/tommy/Projects/pcodeFcg/vector/contrastive/GNN/mips_cbow_v2/test_mips")
+    W2V_MODEL = Path("/home/tommy/Projects/pcodeFcg/vector/contrastive/word2vec/CBOW_v2/word2vec_x86.model")
 
     process_all(CSV_FILE, ROOT_DIR, OUT_DIR, W2V_MODEL)

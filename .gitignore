@@ -3,3 +3,7 @@
 **/alignment/
 **/*.csv
 **/*.txt
+**/*.pth
+**/*.pickle
+**/*.pkl
+**/*.png

@@ -6,12 +6,11 @@ from typing import List, Dict, Tuple, Generator
 from unicodedata import category
 import pandas as pd
 from tqdm import tqdm
-
-__all__ = ['read_csv', 'load_json', 'Pcode_to_sentence']
-
 #Regex pattern preprocessing
 #1)  opcode_pattern: Extract P-Code
 #2)  opcode_pattern: Extract Calculation
+
+__all__ = ["iterate_json_files", "opcode_pat", "operand_pattern", "_map_operand"]
 
 _opcode_pat = re.compile(r"(?:\)\s+|---\s+)([A-Z_]+)")
 _operand_pattern = re.compile(r"\(([^ ,]+)\s*,\s*[^,]*,\s*([0-9]+)\)")
@@ -50,22 +49,3 @@ def _map_operand(op_type: str) -> str:
     if op_type_l == 'stack':
         return "STACK"
     return "UNK"
-
-def _tokenize_line(line:str) -> List[str]:
-    command_match = _opcode_pat.search(line)
-    if not command_match:
-        return []
-
-    command = command_match.group(1)
-    operands = _operand_pattern.findall(line)
-    types = [_map_operand(op)for op, _ in operands]
-
-    # if len(types) > 5:
-    #     types = types[:4] + ["MIX"]
-
-    token = "-".join([command] + types)
-
-    # if len(types) > 5 or token.count("-") > 5:
-    #     print("⚠️ 長度過長:", token)
-    #     assert False, f"Token too long: {token}"
-    return [token]

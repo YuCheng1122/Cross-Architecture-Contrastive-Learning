@@ -7,8 +7,8 @@ from gensim.models import Word2Vec
 from preprocessing import iterate_json_files, _tokenize_line
 
 DATA_DIR = Path("/home/tommy/Projects/cross-architecture/reverse/output_new/results")
-TRAIN_CSV_PATH = Path("/home/tommy/Projects/pcodeFcg/dataset/csv/train.csv")
-OUTPUT_DIR = Path("/home/tommy/Projects/pcodeFcg/vector/contrastive/word2vec/CBOW")
+TRAIN_CSV_PATH = Path("/home/tommy/Projects/pcodeFcg/dataset/csv/temp/train.csv")
+OUTPUT_DIR = Path("/home/tommy/Projects/pcodeFcg/vector/contrastive/word2vec/CBOW_no_mix")
 PICKLE_PATH = OUTPUT_DIR / "sentences_train.pkl"
 BATCH_FILES = 1000
 
